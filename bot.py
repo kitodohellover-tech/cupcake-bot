@@ -7,9 +7,13 @@ import threading
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 DEEPSEEK_KEY = os.getenv("DEEPSEEK_KEY")
 
-bot = telebot.TeleBot(BOT_TOKEN, request_timeout=30)
+if not BOT_TOKEN or not DEEPSEEK_KEY:
+    print("❌ Ошибка: не заданы BOT_TOKEN или DEEPSEEK_KEY в переменных окружения!")
+    # Чтобы деплой не падал сразу, всё равно запустим, но бот не будет работать
+    bot = None
+else:
+    bot = telebot.TeleBot(BOT_TOKEN, request_timeout=30)
 
-# Мини-веб-сервер, чтобы Render не усыплял сервис
 app = Flask(__name__)
 
 @app.route('/')
@@ -62,11 +66,10 @@ def chat(message):
         bot.send_message(user_id, f"⚠️ Ошибка: {e}")
 
 def run_bot():
-    bot.infinity_polling()
+    if bot:
+        bot.infinity_polling()
 
 if __name__ == '__main__':
-    # Запускаем бота в отдельном потоке
     threading.Thread(target=run_bot, daemon=True).start()
-    # Запускаем веб-сервер (Render требует, чтобы слушал порт)
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
