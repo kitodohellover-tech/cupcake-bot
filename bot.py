@@ -1,11 +1,20 @@
 import os
 import telebot
 import requests
+from flask import Flask
+import threading
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 DEEPSEEK_KEY = os.getenv("DEEPSEEK_KEY")
 
 bot = telebot.TeleBot(BOT_TOKEN, request_timeout=30)
+
+# Мини-веб-сервер, чтобы Render не усыплял сервис
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot is running!"
 
 dialogues = {}
 
@@ -52,6 +61,12 @@ def chat(message):
     except Exception as e:
         bot.send_message(user_id, f"⚠️ Ошибка: {e}")
 
-if __name__ == '__main__':
-    print("Bot started...")
+def run_bot():
     bot.infinity_polling()
+
+if __name__ == '__main__':
+    # Запускаем бота в отдельном потоке
+    threading.Thread(target=run_bot, daemon=True).start()
+    # Запускаем веб-сервер (Render требует, чтобы слушал порт)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
