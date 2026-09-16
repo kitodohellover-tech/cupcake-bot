@@ -9,10 +9,10 @@ DEEPSEEK_KEY = os.getenv("DEEPSEEK_KEY")
 
 if not BOT_TOKEN or not DEEPSEEK_KEY:
     print("❌ Ошибка: не заданы BOT_TOKEN или DEEPSEEK_KEY в переменных окружения!")
-    # Чтобы деплой не падал сразу, всё равно запустим, но бот не будет работать
     bot = None
 else:
-    bot = telebot.TeleBot(BOT_TOKEN, request_timeout=30)
+    # Убрали request_timeout — он не поддерживается в pyTelegramBotAPI
+    bot = telebot.TeleBot(BOT_TOKEN)
 
 app = Flask(__name__)
 
@@ -73,3 +73,4 @@ if __name__ == '__main__':
     threading.Thread(target=run_bot, daemon=True).start()
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
+
